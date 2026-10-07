@@ -37,6 +37,8 @@ To update:
 
 `core.js` holds pure persistence, import validation, dependency and progress logic. `app.js` renders the views and handles interactions. Prerequisites are recursive: marking an intermediate quest complete without its earlier unlocks does not make a descendant farm ready. Users can record historical completion without having to tick every prerequisite first. Next-action recommendations exclude optional tasks and favor build-critical work before the selected later route.
 
+The default view starts after Iconoclasm, with one open chapter, short step labels and material requirements beside tasks. The optional inventory audit no longer blocks quests. `step.short` changes only the displayed wording; original instructions remain under Details & sources. Stable IDs and the localStorage schema are unchanged. `paths` group the main route, optional extras and later branches without deleting checklist content. The four main material fields share the same saved quantities as Inventory; suggested reserves are not presented as mandatory costs.
+
 ## Progress and privacy
 
 Progress is stored under **`destiny-roadmap:progress:v1`** in localStorage. It is separate from the portfolio and other projects on the same GitHub Pages origin. Checkbox steps, manual quantities and later-route preference are saved. Theme uses a separate namespaced preference. Updates within the same tab or across tabs rerender progress; simultaneous edits are last-write-wins.

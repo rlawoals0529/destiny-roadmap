@@ -9,7 +9,7 @@ test('starting state records only the user-reported completed mission; resources
   const s = freshState(data);
   assert.deepEqual(s.checks, { 'iconoclasm.1': true });
   assert.deepEqual(s.quantities, {});
-  assert.equal(nextTask(data, s).id, 'audit');
+  assert.equal(nextTask(data, s).id, 'heroes-radio');
 });
 test('checkboxes, counts and route survive save/reload', () => {
   const storage = memoryStorage();
@@ -29,7 +29,7 @@ test('a farm stays blocked until every prerequisite in the full chain is checked
   assert.equal(prerequisites(task('piker-rank'), data, s), false);
   for (const id of ['audit','heroes-radio','queens-one','wild-accept','still-hunt','prism-core','prism-facets','nighthawk-owned','temporary','ren-start','ren-cantina']) s = setTask(s, task(id), true);
   assert.equal(prerequisites(task('piker-rank'), data, s), true);
-  s = setTask(s, task('audit'), false);
+  s = setTask(s, task('iconoclasm'), false);
   assert.equal(prerequisites(task('piker-rank'), data, s), false);
 });
 test('next recommendation advances through the critical path without jumping to a farm', () => {
@@ -51,7 +51,7 @@ test('next recommendation advances through the critical path without jumping to 
 });
 test('route preference changes later branch without bypassing critical tasks', () => {
   const fixture = { ...data, tasks: [
-    { ...task('audit'), id: 'critical', steps: [{ id: 'a' }], requires: [] },
+    { ...task('audit'), id: 'critical', tags: ['Build Critical'], recommend: true, steps: [{ id: 'a' }], requires: [] },
     { ...task('story-start'), id: 'story', steps: [{ id: 'b' }], requires: [], priority: 100 },
     { ...task('after-choice'), id: 'endgame', steps: [{ id: 'c' }], requires: [], priority: 100 }
   ] };

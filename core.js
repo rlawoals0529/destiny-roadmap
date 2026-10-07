@@ -84,7 +84,8 @@ export function setTask(state, task, checked) {
 
 export function filterTasks(data, state, { search = '', tag = 'All', section = 'all', status = 'all' } = {}) {
   const query = search.trim().toLowerCase();
-  return data.tasks.filter(t => (section === 'all' || t.section === section) && (tag === 'All' || t.tags.includes(tag)) &&
+  const path = data.paths?.find(p => p.id === section);
+  return data.tasks.filter(t => (section === 'all' || (path ? path.tasks.includes(t.id) : t.section === section)) && (tag === 'All' || t.tags.includes(tag)) &&
     (status !== 'incomplete' || !complete(t, state)) && (status !== 'ready' || (!complete(t, state) && prerequisites(t, data, state))) &&
     (!query || JSON.stringify(t).toLowerCase().includes(query)));
 }

@@ -3,13 +3,13 @@ import AxeBuilder from '@axe-core/playwright';
 import data from '../../data.js';
 import { freshState, exportState, STORAGE_KEY } from '../../core.js';
 
-test.beforeEach(async ({ page }) => { await page.goto('./'); await expect(page.getByRole('heading', { name: 'Take a two-minute inventory', exact: true })).toBeVisible(); });
+test.beforeEach(async ({ page }) => { await page.goto('./'); await expect(page.getByRole('heading', { name: 'Listen to the Lost City radio', exact: true })).toBeVisible(); });
 test('progress persists across reload and updates next task', async ({ page }) => {
-  await page.getByRole('checkbox', { name: 'Complete task: Take a two-minute inventory', exact: true }).check();
-  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
+  await page.getByRole('checkbox', { name: 'Complete task: Listen to the Lost City radio', exact: true }).check();
+  await expect(page.locator('#next-heading')).toHaveText('Complete Queens, Part I');
   await page.reload();
-  await expect(page.getByRole('checkbox', { name: 'Complete task: Take a two-minute inventory', exact: true })).toBeChecked();
-  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
+  await expect(page.getByRole('checkbox', { name: 'Complete task: Listen to the Lost City radio', exact: true })).toBeChecked();
+  await expect(page.locator('#next-heading')).toHaveText('Complete Queens, Part I');
 });
 test('manual inventory preserves unknown and zero through reload', async ({ page }) => {
   await page.getByRole('link', { name: 'Inventory', exact: true }).click();
@@ -20,7 +20,7 @@ test('manual inventory preserves unknown and zero through reload', async ({ page
   await expect(page.getByLabel('Exotic Ciphers', { exact: true })).toHaveValue('');
 });
 test('export download and import restore both steps and counts; bad import is atomic', async ({ page }) => {
-  await page.getByRole('checkbox', { name: 'Complete task: Take a two-minute inventory', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Complete task: Listen to the Lost City radio', exact: true }).check();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export Progress', exact: true }).click();
   const download = await downloadPromise;
@@ -31,13 +31,13 @@ test('export download and import restore both steps and counts; bad import is at
   await page.getByRole('button', { name: 'Import Progress', exact: true }).click();
   await page.locator('#import-file').setInputFiles(filePath);
   await page.getByRole('button', { name: 'Validate & replace' }).click();
-  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
+  await expect(page.locator('#next-heading')).toHaveText('Complete Queens, Part I');
   await page.getByRole('button', { name: 'Import Progress', exact: true }).click();
   await page.locator('#import-file').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{bad') });
   await page.getByRole('button', { name: 'Validate & replace' }).click();
   await expect(page.locator('#import-error')).toContainText('Existing progress has not changed');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
+  await expect(page.locator('#next-heading')).toHaveText('Complete Queens, Part I');
 });
 test('backup with counters and route imports correctly', async ({ page }) => {
   const s = freshState(data); s.quantities.ciphers = 1; s.route = 'story';
@@ -49,15 +49,15 @@ test('backup with counters and route imports correctly', async ({ page }) => {
   await expect(page.getByLabel('Exotic Ciphers', { exact: true })).toHaveValue('1');
 });
 test('reset requires confirmation and cancel keeps progress', async ({ page }) => {
-  await page.getByRole('checkbox', { name: 'Complete task: Take a two-minute inventory', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Complete task: Listen to the Lost City radio', exact: true }).check();
   await page.getByRole('button', { name: 'Reset Progress', exact: true }).click();
   await page.getByRole('button', { name: 'Keep progress', exact: true }).click();
-  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
+  await expect(page.locator('#next-heading')).toHaveText('Complete Queens, Part I');
   await page.getByRole('button', { name: 'Reset Progress', exact: true }).click();
   await page.getByRole('button', { name: 'Reset this browser', exact: true }).click();
-  await expect(page.locator('#next-heading')).toHaveText('Take a two-minute inventory');
+  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
   await page.reload();
-  await expect(page.locator('#next-heading')).toHaveText('Take a two-minute inventory');
+  await expect(page.locator('#next-heading')).toHaveText('Listen to the Lost City radio');
 });
 test('ready filter does not expose locked farms and opening next clears restrictive filters', async ({ page }) => {
   await page.getByRole('button', { name: 'All sections', exact: false }).click();
@@ -65,7 +65,7 @@ test('ready filter does not expose locked farms and opening next clears restrict
   await expect(page.getByText('Get a first usable Refurbished A499', { exact: true })).toHaveCount(0);
   await page.locator('#search').fill('impossible-filter');
   await page.getByRole('button', { name: 'Open this step' }).click();
-  await expect(page.locator('#details-audit')).toHaveAttribute('open', '');
+  await expect(page.locator('#details-heroes-radio')).toHaveAttribute('open', '');
   await expect(page.locator('#search')).toHaveValue('');
 });
 test('mobile pages have no horizontal overflow and controls remain usable', async ({ page }) => {
@@ -76,7 +76,7 @@ test('mobile pages have no horizontal overflow and controls remain usable', asyn
   }
   await page.getByRole('link', { name: 'Checklist', exact: true }).click();
   await page.getByRole('button', { name: 'Open this step' }).click();
-  await expect(page.locator('#details-audit')).toHaveAttribute('open', '');
+  await expect(page.locator('#details-heroes-radio')).toHaveAttribute('open', '');
 });
 test('visible views meet basic WCAG accessibility checks in day and night themes', async ({ page }) => {
   for (const theme of ['light', 'dark']) {
@@ -92,7 +92,7 @@ test('corrupt saved progress is recoverable and never silently replaced', async 
   await page.evaluate(key => localStorage.setItem(key, '{broken'), STORAGE_KEY);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Export recovery copy' })).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Complete task: Take a two-minute inventory', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Complete task: Listen to the Lost City radio', exact: true }).check();
   expect(await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY)).toBe('{broken');
 });
 test('rendered source links are safe and local assets load without errors', async ({ page }) => {
@@ -105,11 +105,25 @@ test('rendered source links are safe and local assets load without errors', asyn
 test('expanded task cards remain accessible and use unique element IDs', async ({ page }) => {
   await page.getByRole('button', { name: 'All sections', exact: false }).click();
   await page.locator('#tag').selectOption('Build Critical');
-  await page.locator('#details-audit > summary').click();
+  await page.locator('#details-heroes-radio > summary').click();
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(result.violations).toEqual([]);
   const duplicates = await page.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map(e => e.id); return ids.filter((id,i) => ids.indexOf(id) !== i); });
   expect(duplicates).toEqual([]);
   await page.getByRole('link', { name: 'Raids & dungeons', exact: true }).click();
   expect(await page.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map(e => e.id); return ids.length === new Set(ids).size; })).toBe(true);
+});
+test('short route starts after Iconoclasm and material counts stay synchronized', async ({ page }) => {
+  await expect(page.locator('#list-title')).toHaveText('After Iconoclasm');
+  await expect(page.locator('#check-audit')).toHaveCount(0);
+  await expect(page.locator('#check-heroes-radio')).toBeVisible();
+  await page.locator('#need-ciphers').fill('1');
+  await page.locator('#need-credits').click();
+  await page.getByRole('link', { name: 'Inventory', exact: true }).click();
+  await expect(page.getByLabel('Exotic Ciphers', { exact: true })).toHaveValue('1');
+  await page.getByLabel('Exotic Ciphers', { exact: true }).fill('2');
+  await page.getByLabel('Glimmer', { exact: true }).click();
+  await expect(page.locator('#need-ciphers')).toHaveValue('2');
+  await page.reload();
+  await expect(page.locator('#need-ciphers')).toHaveValue('2');
 });

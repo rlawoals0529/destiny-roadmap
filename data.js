@@ -250,4 +250,71 @@ export const glossary = {
   'Build Critical': 'Needed for the functional route chosen here, including learning the rotation. It does not mean all such tasks are game-enforced unlocks.'
 };
 
-export default { version: 1, checkedOn: '2026-10-06', sections, tasks, resources, sources, glossary };
+// Presentation labels can change without remapping any saved checks.
+const shortSteps = {
+  'heroes-radio': ['Return to the Lost City Tower.', 'Speak to Ghost; listen to his radio. Track Destined Heroes.'],
+  'queens-one': ['Launch Queens, Part I from the Lost City banner.', 'Reflect Hive projectiles with the sword guard; finish the adventure.', 'Speak to Micah-10 at the Arbor of Light. Accept Rootbound.'],
+  'wild-accept': ['Speak to Cayde-6 in the Lost City.', 'Accept Wild Card; find the rooftop banner.', 'If missing, check the quest objective and Quest Archive.'],
+  'still-hunt': ['Launch Wild Card from the rooftop banner.', 'Follow Cayde and Crow; collect Dark Ether and investigate.', 'Defeat Lii’liks and finish the mission.', 'Use the Lost City radio; speak to Cayde and claim Still Hunt.'],
+  'excision': ['Find Excision at the right edge of the Pale Heart map.', 'Complete the 12-player narrative mission.', 'Watch the ending; collect Ghost’s remaining rewards.'],
+  'ergo-chain': ['Accept Lost in the Light and Found in the Dark from Ghost.', 'Complete The Hollow I and II.', 'Complete Home I and II.', 'Complete Queens II; collect the Dyadic Prism from Ghost.', 'Take the Prism to the Sacrarium; claim Ergo Sum.'],
+  'convalescence': ['Finish Rootbound → Underbrush → Greenery with Micah-10.', 'Accept Budding; assemble three players.', 'Complete cooperative-focus Ascent, Dissent and Iconoclasm.', 'Return to Micah-10 for Microcosm.'],
+  'prism-core': ['Equip Golden Gun — Marksman.', 'Equip Marksman’s Dodge.', 'Equip Withering Blade.', 'Equip Duskfield Grenade.', 'Equip Stylish Executioner + Winter’s Shroud.', 'Choose your preferred jump.'],
+  'prism-facets': ['Equip Dawn: melee hits grant Radiant.', 'Equip Courage: Slow the target before Golden Gun.', 'Equip Purpose: Orbs give Restoration with Golden Gun.', 'Equip Protection: resistance while surrounded.', 'Equip Hope; add Ruin if another slot is available.'],
+  'nighthawk-owned': ['Already owned? Equip and lock Nighthawk.', 'Otherwise open Rahool’s Novel focusing as Hunter.', 'Focus Nighthawk: 1 Exotic Engram + 1 Exotic Cipher. Check the offer.', 'Alternative: buy from Xûr when stocked, or decrypt engrams.', 'Keep a working copy; optimize its stats later.'],
+  'temporary': ['Equip an owned Legendary primary.', 'Equip Still Hunt + a reliable Legendary heavy.', 'Equip Nighthawk and the Prismatic kit above.', 'Add Siphon, loaders, chest resistances and orb healing.', 'Save “Nighthawk · interim”.'],
+  'ren-start': ['Open Renegades in Destinations; track its introduction.', 'Complete Imperium.', 'Speak to Zavala, then Drifter at Tharsis Cantina.'],
+  'ren-cantina': ['Speak to the Piker Bouncer.', 'Meet Aunor at the marked Cantina seat.', 'Speak to Drifter’s Ghost, then Drifter.', 'Play Drifter’s recording.', 'Collect the three marked Ghost parts in the Bazaar.', 'Speak to Spider.'],
+  'ren-welcome': ['Launch Welcome to the Frontier.', 'Complete the package objective and exfiltrate.', 'Return to Spider for the Ghost components.', 'Speak to Blue; collect the reward and main campaign quest.'],
+  'piker-rank': ['Visit Mechanic Deoriks and the Piker War Chest.', 'Complete Lawless jobs/contracts for Credits and Ingots.', 'Deposit Dark Matter Ingots into the Piker War Chest.', 'Reach Piker Rank 2; confirm A499 is purchasable.'],
+  'a499-first': ['Check the Piker A499 price and daily discount.', 'Buy A499, or keep a Piker War Chest drop.', 'Confirm it is the Kinetic heavy sniper.', 'Lock the first usable copy.'],
+  'a499-roll': ['Target Snapshot Sights + Aggregate Charge; favor reload speed.', 'Keep any Aggregate Charge roll while learning.', 'Keep Auto-Loading Holster as an alternative roll.', 'Gutshot helps body shots, not precision damage.', 'Apply elemental debuffs for Aggregate Charge.', 'Stop with a usable roll; perfect it later.'],
+  'ren-campaign': ['Follow the marked campaign jobs and dialogue.', 'Fearsome Retainer → Out in the Cold → Fire and Ice → The Long Con → Glory Beyond.', 'Collect Spider/Drifter’s final rewards.', 'Check alliance banners and daily Priority Contracts.'],
+  'finished-loadout': ['Equip Legendary primary + Still Hunt + A499 + Nighthawk.', 'Equip Marksman Golden Gun, Dodge, Blade, Duskfield and the starting Aspects.', 'Equip Dawn, Courage, Purpose, Protection and Hope.', 'Add Kinetic Loader and Solar support.', 'Save “Nighthawk · A499”.'],
+  'mods-core': ['Helmet: matching Siphon; ammo support if it fits.', 'Arms: Kinetic Loader; Solar Loader/Dexterity as needed.', 'Chest: encounter-appropriate resistances.', 'Legs: Solar Holster, orb healing and Kinetic Surge if it fits.', 'Class item: Time Dilation for surges; optional dodge utility.', 'Check armor energy costs before fitting extra mods.'],
+  'stat-plan': ['Use current Weapons, Health, Class, Melee, Grenade and Super stats.', 'Start toward 100 Weapons; 200 is a later damage target.', 'Super above 100 improves actual Golden Gun.', 'Keep enough survival and ability uptime.', 'Record equipped stats after mods and fragments.'],
+  'artifact-main': ['Check S29 Encrypted Data Disk: Sniper’s Meditation and Reload at Range.', 'Compare Hunter’s Journal for a Still Hunt-led setup.', 'Read current perk tooltips; use one artifact at a time.', 'Save artifact selections with the loadout; check Champion coverage.'],
+  'dps-prep': ['Rally or collect ammo; check reserves.', 'Charge Still Hunt and your actual Golden Gun separately.', 'Agree on buffs/debuffs; apply Slow when useful.', 'Refresh Radiant and collect Armor Charge.', 'Aim at the crit spot; wait for vulnerability.'],
+  'dps-open': ['Fire a charged Still Hunt precision shot.', 'Cast Golden Gun and land the Nighthawk crit.', 'Swap to A499; fire and manually reload.', 'Adjust the opener to the boss’s damage window.'],
+  'dps-loop': ['Fire/reload A499 accurately.', 'Charge Still Hunt with regular precision shots.', 'Stow Still Hunt for Solar Holster while using A499.', 'Return, finish charging, then special-reload the charged shot.', 'Practice normal reloads before animation shortening.', 'Complete three clean practice attempts.'],
+  'dps-recover': ['Missed Still Hunt crit: keep charging; reload or use Holster.', 'Missed Golden Gun: continue weapon damage.', 'Boss moved: reposition; avoid wasting precision ammo.', 'Buffs expired: refresh them when safe.', 'Armor Charge expired: pick up a safe Orb.', 'Heavy empty: use Still Hunt; recover ammo between phases.', 'Save the loadout and export progress.']
+};
+for (const t of tasks) {
+  for (const [i, step] of t.steps.entries()) if (shortSteps[t.id]?.[i]) step.short = shortSteps[t.id][i];
+  if (t.id === 'audit') { t.tags = ['Optional']; t.recommend = false; }
+  t.requires = t.requires.map(id => id === 'audit' ? 'iconoclasm' : id);
+}
+
+export const needs = {
+  'heroes-radio': 'No materials', 'queens-one': 'No materials', 'wild-accept': 'No materials', 'still-hunt': 'No materials', 'excision': 'No materials',
+  'ergo-chain': 'Dyadic Prism · quest reward', 'convalescence': 'No purchase · 3-player cooperative missions',
+  'prism-core': 'Starting unlocks · no materials', 'prism-facets': 'Starting fragments · no materials',
+  'nighthawk-owned': 'If missing: 1 Exotic Engram + 1 Exotic Cipher',
+  'nighthawk-tune': 'Focusing / masterwork costs · check the item',
+  'ren-start': 'Renegades access · no material purchase', 'ren-cantina': '3 Ghost parts · collect from quest markers', 'ren-welcome': 'Courier package · mission pickup',
+  'piker-rank': 'Dark Matter Ingots → Piker reputation; reach Rank 2', 'a499-first': 'Credits · current Piker shop price', 'a499-farm': 'Credits + Ingots · set your own budget',
+  'a499-roll': 'No extra cost to keep/test a roll', 'mods-core': 'Armor energy · inspect equipped pieces',
+  'stat-plan': 'No fixed material requirement', 'artifact-main': 'Artifact unlocks · no focusing purchase',
+  'facet-chests': '5 Light/Darkness vestiges per Memory', 'hezen-get': '5 Deepsight pattern extractions to craft',
+  'catalyst-still': 'Catalyst acquired + 500 kills', 'endgame-target': '4 matching non-helmet armor pieces'
+};
+
+sources.khvostov = { title: 'Shacknews · Khvostov unlock', url: 'https://www.shacknews.com/article/140289/unlock-khvostov-7g-0x-destiny-2', kind: 'Quest walkthrough', date: '2024-06-17 · checked 2026-10-07' };
+sources.dual = { title: 'Shacknews · Dual Destiny unlock', url: 'https://www.shacknews.com/article/140650/unlock-dual-destiny-destiny-2', kind: 'Quest walkthrough', date: '2024 · checked 2026-10-07' };
+task('khvostov', 'finale', 'Khvostov · optional collection', ['Progress Micah-10 to Alone in the Dark; unlock all six Cysts.', 'Collect 15 Lost Encryption Bits: 9 regional chests + 6 Cysts.', 'Open the legendary Khvostov chest between the Impasse and Divide.', 'Collect 17 Motes of Light: 9 unique Overthrow bosses + 8 Visions of the Traveler.', 'Place the eight Visions at the old Speaker area in the Lost City; open the Exotic chest.'], { tags: ['Exotic', 'Optional'], requires: ['queens-one'], time: '3–6 hr', reward: 'Khvostov', sources: ['khvostov'], why: 'Pale Heart collection goal. The Exotic cannot share a loadout with Still Hunt.' });
+task('dual-destiny', 'finale', 'Dual Destiny · optional class item', ['Finish Overthrow in the Landing, Blooming and Impasse.', 'After each clear, defeat that region’s Secret-Keeper during the cooldown.', 'Follow the green beam from the Blooming; complete the Light/Dark orb unlock encounter.', 'Bring a communicating partner and complete Dual Destiny.'], { tags: ['Exotic', 'Prismatic', 'Optional'], requires: ['excision'], time: '1–2 hr unlock + first clear', team: '2 players; communication required', reward: 'Relativism', sources: ['dual'], why: 'Unlock a separate Prismatic build. Relativism cannot be equipped with Nighthawk.' });
+needs.khvostov = '15 Lost Encryption Bits + 17 Motes of Light + 8 Visions';
+needs['dual-destiny'] = 'No purchase · 2 communicating players';
+resources.push(
+  { id: 'lost-bits', name: 'Lost Encryption Bits', cap: null, target: 15, use: 'Khvostov: 9 regional chests + 6 Cysts. They become a code when complete.', source: 'khvostov' },
+  { id: 'motes-light', name: 'Motes of Light', cap: null, target: 17, use: 'Khvostov: 9 unique Overthrow bosses + 8 Visions. Converted/used by the quest.', source: 'khvostov' },
+  { id: 'traveler-visions', name: 'Visions of the Traveler', cap: 8, target: 8, use: 'Place all eight at the old Speaker area for the Khvostov chest.', source: 'khvostov' }
+);
+
+export const paths = [
+  { id: 'now', title: 'After Iconoclasm', tasks: tasks.filter(t => (t.tags.includes('Build Critical') && t.section !== 'position') || ['excision', 'ren-campaign'].includes(t.id)).map(t => t.id) },
+  { id: 'extras', title: 'Pale Heart & build extras', tasks: tasks.filter(t => t.tags.includes('Optional') && ['finale', 'prismatic', 'nighthawk', 'build', 'renegades'].includes(t.section)).map(t => t.id) },
+  { id: 'later', title: 'After A499', tasks: tasks.filter(t => ['endgame', 'story', 'hezen'].includes(t.section)).map(t => t.id) }
+];
+
+export default { version: 1, checkedOn: '2026-10-06', sections, tasks, resources, sources, glossary, needs, paths };

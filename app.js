@@ -8,7 +8,7 @@ try { storage = window.localStorage; } catch { storage = { getItem() { throw new
 const loaded = loadState(storage, data);
 let state = loaded.state;
 let recovery = loaded.recovery;
-let section = 'position';
+let section = 'now';
 let view = 'journey';
 let suggested = null;
 let saveMessage = loaded.error ? 'Not saved · export a backup' : 'Saved on this browser';
@@ -60,46 +60,51 @@ function replaceState(next) {
 }
 
 function renderProgress() {
-  const overall = progress(data.tasks, state);
+  const overall = progress(data.tasks.filter(t => data.paths[0].tasks.includes(t.id)), state);
   const build = progress(data.tasks.filter(t => t.tags.includes('Build Critical')), state);
   $('overall-percent').textContent = overall.percent + '%';
   $('overall-bar').value = overall.percent;
-  $('overall-count').textContent = `${overall.done} of ${overall.total} individual steps checked`;
+  $('overall-count').textContent = `${overall.done}/${overall.total} route steps`;
   $('build-percent').textContent = build.percent + '%';
   $('save-status').textContent = saveMessage;
   suggested = nextTask(data, state);
   $('next-heading').textContent = suggested?.title || 'Your selected route is complete.';
-  $('next-description').textContent = suggested ? suggested.steps.find(s => !state.checks[s.id]).text : 'Browse optional goals, record your clears, or export a backup.';
-  $('next-meta').textContent = suggested ? `${suggested.time} · ${suggested.team} · ${suggested.tier}` : '';
+  const step = suggested?.steps.find(s => !state.checks[s.id]);
+  $('next-description').textContent = step ? step.short || step.text : 'Choose an optional goal or the next campaign.';
+  $('next-meta').textContent = suggested ? data.needs[suggested.id] || `${suggested.time} · ${suggested.team}` : '';
   $('open-next').disabled = !suggested;
   renderNav();
 }
 
 function renderNav() {
-  $('section-nav').innerHTML = [{ id: 'all', title: 'All sections' }, ...data.sections].map(s => {
-    const tasks = s.id === 'all' ? data.tasks : data.tasks.filter(t => t.section === s.id);
+  const navButton = s => {
+    const tasks = filterTasks(data, state, { section: s.id });
     const p = progress(tasks, state);
     return `<button data-section="${esc(s.id)}" class="${section === s.id ? 'active' : ''}" ${section === s.id ? 'aria-current="true"' : ''}><span>${esc(s.title)}</span><span class="nav-count">${p.percent}%</span></button>`;
-  }).join('');
+  };
+  $('section-nav').innerHTML = [...data.paths, { id: 'all', title: 'All sections' }].map(navButton).join('') +
+    `<details class="section-library"><summary>Individual sections</summary>${data.sections.map(navButton).join('')}</details>`;
 }
 
 function taskCard(task) {
   const p = progress([task], state);
   const ready = prerequisites(task, data, state);
   const done = complete(task, state);
-  const dependency = task.requires.length ? `<p class="dependency-note">${ready ? 'Prerequisites checked:' : 'Before this step:'} ${task.requires.map(id => {
+  const dependency = task.requires.length ? `<p class="dependency-note">${ready ? 'Done first:' : 'Do first:'} ${task.requires.map(id => {
     const t = data.tasks.find(t => t.id === id);
     return `<button data-task="${esc(id)}">${esc(t.title)}</button>`;
-  }).join(' · ')}${!ready ? '. You can record something already completed; it will not be suggested until its prerequisite chain is checked.' : ''}</p>` : '';
-  return `<article class="task ${done ? 'done' : ''}" id="task-${esc(task.id)}"><div class="task-head"><label class="task-check" title="Check or uncheck all steps in this task"><input type="checkbox" id="check-${esc(task.id)}" data-whole="${esc(task.id)}" aria-label="Complete task: ${esc(task.title)}" ${done ? 'checked' : ''}></label><details id="details-${esc(task.id)}"><summary><span><span class="task-title">${esc(task.title)}</span><span class="task-brief">${p.done}/${p.total} steps · ${esc(task.time)} · ${done ? 'Complete' : ready ? 'Ready' : 'Prerequisites pending'}${task.era ? ' · ' + esc(task.era) : ''}</span></span></summary><div class="task-body"><div class="badges"><span class="badge ${task.tags.includes('Build Critical') ? 'required' : ''}">${esc(task.tier)}</span>${task.tags.map(tag => `<span class="badge">${esc(tag)}</span>`).join('')}</div><p>${esc(task.why)}</p>${dependency}<h4>Steps</h4><div class="step-list">${task.steps.map(s => `<label class="step" for="step-${esc(s.id)}"><input type="checkbox" id="step-${esc(s.id)}" data-step="${esc(s.id)}" aria-label="${esc(s.text)}" ${state.checks[s.id] ? 'checked' : ''}><span>${esc(s.text)}</span></label>`).join('')}</div><dl class="task-meta"><div><dt>Where</dt><dd>${esc(task.location)}</dd></div><div><dt>Reward</dt><dd>${esc(task.reward)}</dd></div><div><dt>Fireteam</dt><dd>${esc(task.team)}</dd></div><div><dt>RNG / schedule</dt><dd>${esc(task.gate)}</dd></div></dl>${task.note ? `<p class="task-note">${esc(task.note)}</p>` : ''}<div class="source-links">${sourceLinks(task.sources)}</div></div></details></div></article>`;
+  }).join(' · ')}</p>` : '';
+  const need = data.needs[task.id];
+  return `<article class="task ${done ? 'done' : ''}" id="task-${esc(task.id)}"><div class="task-head"><label class="task-check" title="Check or uncheck all steps"><input type="checkbox" id="check-${esc(task.id)}" data-whole="${esc(task.id)}" aria-label="Complete task: ${esc(task.title)}" ${done ? 'checked' : ''}></label><details id="details-${esc(task.id)}"><summary><span><span class="task-title">${esc(task.title)}</span><span class="task-brief">${p.done}/${p.total} · ${esc(task.time)} · ${done ? 'Done' : ready ? task.team : 'Locked'}${task.tags.includes('Optional') ? ' · Optional' : ''}</span>${need ? `<span class="task-need">Need: ${esc(need)}</span>` : ''}</span></summary><div class="task-body">${!ready ? dependency : ''}<div class="step-list">${task.steps.map(s => `<label class="step" for="step-${esc(s.id)}"><input type="checkbox" id="step-${esc(s.id)}" data-step="${esc(s.id)}" aria-label="${esc(s.short || s.text)}" ${state.checks[s.id] ? 'checked' : ''}><span>${esc(s.short || s.text)}</span></label>`).join('')}</div><details class="task-reference"><summary>Details & sources</summary><p>${esc(task.why)}</p>${ready ? dependency : ''}<dl class="task-meta"><div><dt>Where / reward</dt><dd>${esc(task.location)} · ${esc(task.reward)}</dd></div><div><dt>RNG / schedule</dt><dd>${esc(task.gate)}</dd></div></dl>${task.steps.some(s => s.short) ? `<ol>${task.steps.map(s => `<li>${esc(s.text)}</li>`).join('')}</ol>` : ''}${task.note ? `<p>${esc(task.note)}</p>` : ''}<div class="source-links">${sourceLinks(task.sources)}</div></details></div></details></div></article>`;
 }
 
 function groups(tasks) {
+  const first = data.sections.find(s => tasks.some(t => t.section === s.id && !complete(t, state)));
   return data.sections.map(s => {
     const items = tasks.filter(t => t.section === s.id);
     if (!items.length) return '';
     const p = progress(data.tasks.filter(t => t.section === s.id), state);
-    return `<div class="group-heading"><h3>${esc(s.title)}</h3><p class="small muted">${esc(s.description)}</p><div class="section-meter"><progress max="100" value="${p.percent}" aria-label="${esc(s.title)} completion"></progress><span>${p.percent}% · ${p.done}/${p.total} section steps</span></div></div>${items.map(taskCard).join('')}`;
+    return `<details class="chapter" id="chapter-${esc(s.id)}" ${s.id === first?.id ? 'open' : ''}><summary><span>${esc(s.title)}</span><span class="chapter-count">${p.percent}%</span></summary><div>${items.map(taskCard).join('')}</div></details>`;
   }).join('');
 }
 
@@ -107,7 +112,7 @@ function renderTasks() {
   const open = [...document.querySelectorAll('#task-list details[open], #record-list details[open]')].map(d => d.id);
   const focus = document.activeElement?.id;
   const tasks = filterTasks(data, state, { section, search: $('search').value, tag: $('tag').value, status: $('status').value });
-  $('list-title').textContent = section === 'all' ? 'The full roadmap' : data.sections.find(s => s.id === section).title;
+  $('list-title').textContent = section === 'all' ? 'All sections' : [...data.paths, ...data.sections].find(s => s.id === section).title;
   $('list-count').textContent = `${tasks.length} tasks shown`;
   $('task-list').innerHTML = view !== 'journey' ? '' : tasks.length ? groups(tasks) : '<p class="empty">No steps match these filters. Clear the filters to see the route again.</p>';
   $('record-list').innerHTML = view === 'record' ? groups(data.tasks.filter(t => ['raids', 'dungeons'].includes(t.section))) : '';
@@ -124,7 +129,13 @@ function renderResources() {
   $('resource-list').innerHTML = data.resources.map(r => {
     const value = state.quantities[r.id] ?? '';
     const target = r.target == null ? 'No fixed target' : 'Suggested goal: ' + r.target.toLocaleString();
-    return `<article class="resource-card"><label for="quantity-${esc(r.id)}">${esc(r.name)}</label><input id="quantity-${esc(r.id)}" data-quantity="${esc(r.id)}" type="number" inputmode="numeric" min="0" step="1" placeholder="Unknown" value="${value}" aria-describedby="resource-help-${esc(r.id)}"><p id="resource-help-${esc(r.id)}">${esc(r.use)}</p><small>${esc(target)} · ${r.cap == null ? 'Cap: confirm in-game' : 'Cap: ' + r.cap.toLocaleString()}</small><small class="quantity-status" id="resource-status-${esc(r.id)}">${quantityStatus(r, value)}</small>${sourceLinks([r.source])}</article>`;
+    return `<article class="resource-card"><label for="quantity-${esc(r.id)}">${esc(r.name)}</label><input id="quantity-${esc(r.id)}" data-quantity="${esc(r.id)}" type="number" inputmode="numeric" min="0" step="1" placeholder="Unknown" value="${value}"><small class="quantity-status" data-resource-status="${esc(r.id)}">${quantityStatus(r, value)}</small><details><summary>Use & target</summary><p>${esc(r.use)}</p><small>${esc(target)} · ${r.cap == null ? 'Cap: confirm in-game' : 'Cap: ' + r.cap.toLocaleString()}</small>${sourceLinks([r.source])}</details></article>`;
+  }).join('');
+  $('needed-list').innerHTML = ['ciphers', 'exotic-engrams', 'credits', 'ingots'].map(id => {
+    const r = data.resources.find(r => r.id === id);
+    const value = state.quantities[id] ?? '';
+    const goal = id === 'ciphers' || id === 'exotic-engrams' ? (complete(data.tasks.find(t => t.id === 'nighthawk-owned'), state) ? 'Nighthawk owned · no purchase needed' : 'Need 1 · only if Nighthawk is missing') : id === 'credits' ? 'A499 · check the Piker shop price' : 'Piker reputation · reach Rank 2';
+    return `<label class="needed-field" for="need-${id}"><span>${esc(r.name)}</span><input id="need-${id}" data-quantity="${id}" type="number" min="0" step="1" inputmode="numeric" placeholder="Have?" value="${value}"><small>${esc(goal)}</small></label>`;
   }).join('');
 }
 
@@ -148,7 +159,7 @@ function selectView(name) {
 }
 
 function openSection(id) {
-  if (id !== 'all' && !data.sections.some(s => s.id === id)) return;
+  if (id !== 'all' && ![...data.paths, ...data.sections].some(s => s.id === id)) return;
   section = id;
   $('search').value = '';
   $('tag').value = 'All';
@@ -162,6 +173,7 @@ function openTask(id) {
   const t = data.tasks.find(t => t.id === id);
   if (!t) return;
   openSection(t.section);
+  $('chapter-' + t.section).open = true;
   $('details-' + id).open = true;
   $('task-' + id).scrollIntoView({ block: 'start' });
   $('details-' + id).querySelector('summary').focus({ preventScroll: true });
@@ -183,8 +195,8 @@ document.addEventListener('click', event => {
 
 document.addEventListener('change', event => {
   const input = event.target;
-  if (input.dataset.step) { persist({ ...state, checks: { ...state.checks, [input.dataset.step]: input.checked } }); renderTasks(); }
-  if (input.dataset.whole) { persist(setTask(state, data.tasks.find(t => t.id === input.dataset.whole), input.checked)); renderTasks(); }
+  if (input.dataset.step) { persist({ ...state, checks: { ...state.checks, [input.dataset.step]: input.checked } }); renderTasks(); renderResources(); }
+  if (input.dataset.whole) { persist(setTask(state, data.tasks.find(t => t.id === input.dataset.whole), input.checked)); renderTasks(); renderResources(); }
   if (input.dataset.quantity) {
     const value = input.value.trim() === '' ? null : Number(input.value);
     if (value !== null && (!Number.isSafeInteger(value) || value < 0 || value > 1e9)) {
@@ -194,7 +206,8 @@ document.addEventListener('change', event => {
     }
     persist({ ...state, quantities: { ...state.quantities, [input.dataset.quantity]: value } });
     const resource = data.resources.find(r => r.id === input.dataset.quantity);
-    $('resource-status-' + resource.id).textContent = quantityStatus(resource, value);
+    for (const status of document.querySelectorAll('[data-resource-status]')) if (status.dataset.resourceStatus === resource.id) status.textContent = quantityStatus(resource, value);
+    for (const field of document.querySelectorAll('[data-quantity]')) if (field.dataset.quantity === resource.id) field.value = value ?? '';
   }
 });
 
