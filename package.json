@@ -1,0 +1,17 @@
+{
+  "name": "destiny-roadmap",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/server.mjs",
+    "test": "node --test tests/core.test.mjs",
+    "check": "node --check app.js && node --check core.js && node --check data.js && node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@axe-core/playwright": "^4.11.0"
+  }
+}
